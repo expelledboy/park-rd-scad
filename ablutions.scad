@@ -84,64 +84,64 @@ translate([0, m_kitchen_heyman ]) {
         south_to_boundary,
         -(west_to_kitchen + abolution.y)
     ]) {
-        difference() {
-            // Exterior walls
-            color("DarkGrey") cube(abolution);
-
-            // Add the serving window
-            translate([
-                abolution.x / 2 - window_width / 2,
-                0 - 10,
-                window_y_offset,
-            ]) cube([
-                window_width,
-                brick_wall + 20,
-                window_height
-            ]);
-
-            for (room = [0:1:3]) {
-
-                // Offset by the room interior size and the brick wall
-                translate([ 0, room * (room_interior.y + brick_wall), ]) {
-
-                    // Remove the interior walls
-                    translate([ brick_wall, brick_wall, -10 ])
-                        cube([
-                            room_interior.x,
-                            room_interior.y,
-                            abolution.z + 20
-                        ]);
-
-                    // In room 1 and 2 add doors to the exterior
-                    if (room < 2) {
-                        door_center = room_interior.y / 2 - doorway / 2;
-                        translate([ -10, door_center, 0 ]) cube(y_door);
-                        across_the_room = room_interior.x + brick_wall;
-                        translate([ across_the_room - 10, door_center, 0 ]) cube(y_door);
-                    }
-
-                    // Add doors between rooms 2 to 4
-                    if (room > 1) {
-                        door_center = abolution.x / 2 - doorway / 2;
-                        translate([ door_center, -10,  0 ]) cube(x_door);
-                    }
-
-                } // translate
-
-            } // for
-        }
-
         for (room = [0:1:3]) {
 
             translate([ 0, room * (room_interior.y + brick_wall), ]) {
+                wall_east = [ abolution.x, brick_wall, abolution.z ];
+                wall_north = [ brick_wall, room_interior.y, abolution.z ];
+                
+                // East wall
+                difference() {
+                    cube(wall_east);
+
+                    if (room == 0) {
+                        // Add serving window
+                        translate([
+                            abolution.x / 2 - window_width / 2,
+                            0 - 10,
+                            window_y_offset,
+                        ]) cube([
+                            window_width,
+                            brick_wall + 20,
+                            window_height
+                        ]);
+                    }
+
+                    if (room > 1) {
+                        // Add door to the next room
+                        door_center = abolution.x / 2 - doorway / 2;
+                        translate([ door_center, -10,  0 ]) cube(x_door);
+                    }
+                }
+
+                door_center = room_interior.y / 2 - doorway / 2;
+
+                // South wall
+                translate([ 0, brick_wall ]) difference() {
+                    cube(wall_north);
+
+                    // Add door to the exterior
+                    if (room < 2) translate([ -10, door_center, 0 ]) cube(y_door);
+                }
+
+                // North wall
+                translate([ abolution.x - brick_wall, brick_wall ]) difference() {
+                    cube(wall_north);
+
+                    // Add door to the exterior
+                    if (room < 2) translate([ -10, door_center, 0 ]) cube(y_door);
+                }
+
+                // West wall
+                if (room == 3) translate([ 0, room_interior.y ]) cube(wall_east);
 
                 // Place a toilet in the south west corner
                 if (room == 3) {
                     translate([
                         brick_wall,
                         brick_wall + room_interior.y - toilet_cubical.y,
-                        10,
-                    ]) square(toilet_cubical);
+                        200,
+                    ]) color("LightBlue") square(toilet_cubical);
                 }
 
                 // Place all toilets
@@ -150,11 +150,14 @@ translate([0, m_kitchen_heyman ]) {
                         translate([
                             brick_wall,
                             brick_wall + (toilet * toilet_cubical.y),
-                            10,
+                            200,
                         ]) {
-                            square(toilet_cubical);
+                            color("LightBlue") square(toilet_cubical);
                             opposite_wall = room_interior.x - toilet_cubical.x;
-                            translate([ opposite_wall, 0 ]) square(toilet_cubical);
+
+                            translate([ opposite_wall, 0 ])
+                                color("LightBlue")
+                                square(toilet_cubical);
                         }
                     }
                 }
